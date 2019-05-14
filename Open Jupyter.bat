@@ -1,0 +1,2 @@
+call activate deeplearning
+jupyter notebook
