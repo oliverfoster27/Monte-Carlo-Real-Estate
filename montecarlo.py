@@ -99,7 +99,7 @@ def one_sim(condo_cost, amortization_period, horizon, verbose=1):
     total_market_value = stock_asset.market_value + re_asset.market_value
     total_cost = stock_asset.cost + re_asset.cost
     total_book_value = stock_asset.book_value + re_asset.book_value
-    ROI = (total_market_value - (total_book_value + total_cost)) / total_market_value
+    ROI = (total_market_value - (total_book_value + total_cost)) / (total_book_value + total_cost)
 
     return pd.DataFrame(data), ROI
 
