@@ -4,12 +4,21 @@ import pandas as pd
 
 
 def last_entry(entry):
+    """Returns the last entry of a series"""
     if len(entry) != 0:
         return entry[-1]
 
 
 def create_sp_return_generator():
+    """Returns a function that randomly returns S&P performance from it's historical distribution
 
+    Parameters:
+    None
+
+    Returns:
+    Function:get_sp_return
+
+   """
     # Import the historical S&P returns data
     sp = pd.read_csv(r'sp-500-historical-annual-returns.csv', index_col='date', parse_dates=True)
     # Include data only after 1970
@@ -27,7 +36,15 @@ def create_sp_return_generator():
 
 
 def create_housing_return_generator():
+    """Returns a function that randomly returns Montreal composite HPI returns from it's historical distribution
 
+    Parameters:
+    None
+
+    Returns:
+    Function:get_housing_return
+
+   """
     # Import the historical housing index data for Montreal
     housing = pd.read_csv(r'montreal-historical-housing-index.csv', usecols=[0, 1], index_col='Date', parse_dates=True)
     # Resample the data on a yearly basis & take the last entry for that year
@@ -46,13 +63,24 @@ def create_housing_return_generator():
     return get_housing_return
 
 
-def one_sim(condo_cost, amortization_period, horizon, verbose=1):
+def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, horizon, initial_investment,
+            raise_rate=0.03, verbose=1):
+    """Returns data from one simulation of a given investment strategy
 
-    gross_salary = 68_000
-    investment_rate = 0.45
-    raise_rate = 0.03
-    initial_investment = 20_000
+    Parameters:
+    condo_cost
+    amortization_period
+    gross_salary
+    investment_rate
+    horizon
+    initial_investment
+    raise_rate=0.03
+    verbose=1
 
+    Returns:
+    tuple: (pd.DataFrame:performance_history, float:ROI)
+
+   """
     stock_asset = StockAsset(initial_investment, verbose=verbose)
     re_asset = REAsset(condo_cost, amortization_period=amortization_period, verbose=verbose)
 
@@ -84,6 +112,7 @@ def one_sim(condo_cost, amortization_period, horizon, verbose=1):
     # Add the cost of selling to your asset
     re_asset.sell_asset()
 
+    # Calculate ROI
     total_market_value = stock_asset.market_value + re_asset.market_value
     total_cost = stock_asset.cost + re_asset.cost
     total_book_value = stock_asset.book_value + re_asset.book_value
@@ -93,6 +122,23 @@ def one_sim(condo_cost, amortization_period, horizon, verbose=1):
 
 
 class REAsset:
+    """Real-Estate asset object to track status of the investment over time
+
+    Parameters:
+    initial_investment
+    rent_cost=1100
+    condo_fees=300
+    startup_cost=6_000
+    mortgage_rate=0.032
+    property_tax_rate=0.01
+    school_tax_rate=0.0015
+    re_broker_fee=0.05
+    downpayment_rate=0.2
+    amortization_period=20
+    verbose=1
+    rent_increase_rate=0.03
+
+   """
 
     def __init__(self, initial_investment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
                  mortgage_rate=0.032,
@@ -136,6 +182,7 @@ class REAsset:
             print("Mortgage Payment Due: ${:.2f}".format(self.mortgage_payment/12))
 
     def year_end_evaluation(self):
+        """Calculate the updated value of the asset after each year"""
 
         self.mortgage_payment = 0
         self.principal_payment = 0
@@ -166,6 +213,14 @@ class REAsset:
 
 
 class StockAsset:
+    """Stock asset object to track status of the investment over time
+
+    Parameters:
+    initial_investment
+    verbose=1
+    yearly_transaction_cost=100
+
+   """
 
     def __init__(self, initial_investment, verbose=1, yearly_transaction_cost=100):
         self.yearly_transaction_cost = yearly_transaction_cost
@@ -178,6 +233,10 @@ class StockAsset:
             print("Stock Initial Investment: ${}".format(initial_investment))
 
     def year_end_evaluation(self, yearly_investment):
+        """
+        Calculate the updated value of the asset after each year
+        with the addition of a new yearly lump-sum investment
+        """
         # Calculate value based on a year of accruing along with a lump-sum investment at year-end
         self.book_value = self.book_value + yearly_investment
         self.market_value = self.market_value * (1 + self.sp_return()) + yearly_investment
