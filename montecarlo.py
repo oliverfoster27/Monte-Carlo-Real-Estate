@@ -1,6 +1,6 @@
+from mortgage import Loan
 import numpy as np
 import pandas as pd
-import random
 
 
 def last_entry(entry):
@@ -11,25 +11,16 @@ def last_entry(entry):
 def create_sp_return_generator():
 
     # Import the historical S&P returns data
-    sp = pd.read_csv(r'sp-500-historical-annual-returns.csv')
-    # Create the array that stores the bucket bounds
-    bucket_array = np.linspace(-50, 50, 101)
-    # Assign each datapoint a bucket
-    sp['bucket'] = pd.cut(sp['value'], bucket_array)
-    # Groupby count the number of instances in each bucket
-    sp = sp.groupby(['bucket'])[['value']].count()
-    # Create pseudo-probabilities around the frequency of being in each bucket
-    sp['probability'] = sp['value'] / sp['value'].sum()
-    # Format the dataframe
-    sp.reset_index(inplace=True)
-    sp.rename(index=str, columns={"value": "count"}, inplace=True)
+    sp = pd.read_csv(r'sp-500-historical-annual-returns.csv', index_col='date', parse_dates=True)
+    # Include data only after 1970
+    sp = sp.loc[sp.index > '1970-01-01', :]
+
+    mean = sp['value'].mean()
+    stddev = sp['value'].std()
 
     def get_sp_return():
-        # Randomly choose a bucket based off the distribution of probabilities
-        bucket_choice = np.random.choice(len(sp), 1, p=sp['probability'])
-        left, right = sp.iloc[bucket_choice]['bucket'][0].left, sp.iloc[bucket_choice]['bucket'][0].right
-        # Randomly pick a return between the two bounds of the bucket (uniform)
-        return random.uniform(left, right)/100
+
+        return np.random.normal(mean, stddev) / 100
 
     # Return the function
     return get_sp_return
@@ -43,30 +34,20 @@ def create_housing_return_generator():
     housing = housing.resample(rule='A').apply(last_entry)
     # get the % change of the housing prices over each year
     housing['return'] = housing['Composite_HPI'].pct_change().fillna(106.3 / 100 - 1) * 100
-    # Create the array that stores the bucket bounds
-    bucket_array = np.linspace(0, 8, 9)
-    # Assign each datapoint a bucket
-    housing['bucket'] = pd.cut(housing['return'], bucket_array)
-    # Groupby count the number of instances in each bucket
-    housing = housing.groupby(['bucket'])[['return']].count()
-    # Create pseudo-probabilities around the frequency of being in each bucket
-    housing['probability'] = housing['return'] / housing['return'].sum()
-    # Format the dataframe
-    housing.reset_index(inplace=True)
-    housing.rename(index=str, columns={"return": "count"}, inplace=True)
+
+    mean = housing['return'].mean()
+    stddev = housing['return'].std()
 
     def get_housing_return():
-        # Randomly choose a bucket based off the distribution of probabilities
-        bucket_choice = np.random.choice(len(housing), 1, p=housing['probability'])
-        left, right = housing.iloc[bucket_choice]['bucket'][0].left, housing.iloc[bucket_choice]['bucket'][0].right
-        # Randomly pick a return between the two bounds of the bucket (uniform)
-        return random.uniform(left, right)/100
+
+        return np.random.normal(mean, stddev) / 100
 
     # Return the function
     return get_housing_return
 
 
 def one_sim(condo_cost, amortization_period, horizon, verbose=1):
+
     gross_salary = 68_000
     investment_rate = 0.45
     raise_rate = 0.03
@@ -81,15 +62,22 @@ def one_sim(condo_cost, amortization_period, horizon, verbose=1):
         yearly_stock_investment = investment_rate * gross_salary - re_asset.yearly_payment
 
         if yearly_stock_investment < 0:
-            raise ValueError("You can't afford this mortgage")
+            raise ValueError("You can't afford this mortgage with monthly payment of {}".format(re_asset.yearly_payment/12))
 
-        data.append(
-            {'Stock Asset: Market Value': stock_asset.market_value, 'Stock Asset: Book Value': stock_asset.book_value,
-             'Stock Asset: Accrued Cost': stock_asset.cost,
-             'RE Asset: Market Value': re_asset.market_value, 'RE Asset: Book Value': re_asset.book_value,
-             'RE Asset: Accrued Cost': re_asset.cost})
         stock_asset.year_end_evaluation(yearly_stock_investment)
         re_asset.year_end_evaluation()
+        data.append(
+            {'Stock Asset: Market Value': stock_asset.market_value,
+             'Stock Asset: Book Value': stock_asset.book_value,
+             'Stock Asset: Accrued Cost': stock_asset.cost,
+             'RE Asset: Market Value': re_asset.market_value,
+             'RE Asset: Book Value': re_asset.book_value,
+             'RE Asset: Accrued Cost': re_asset.cost,
+             'RE Asset: Mortgage Payment': re_asset.mortgage_payment,
+             'RE Asset: Taxes': re_asset.taxes,
+             'RE Asset: Yearly Payment': re_asset.yearly_payment,
+             'RE Asset: Interest Payment': re_asset.interest_payment,
+             'RE Asset: Rent': re_asset.rent_cost})
 
         gross_salary = (1 + raise_rate) * gross_salary
 
@@ -107,44 +95,36 @@ def one_sim(condo_cost, amortization_period, horizon, verbose=1):
 class REAsset:
 
     def __init__(self, initial_investment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
-                 mortgate_fixed_rate=0.032,
+                 mortgage_rate=0.032,
                  property_tax_rate=0.01, school_tax_rate=0.0015, re_broker_fee=0.05, downpayment_rate=0.2,
                  amortization_period=20, verbose=1, rent_increase_rate=0.03):
 
         self.year_counter = 0
+        self.__dict__.update(locals())
 
-        self.amortization_period = amortization_period
-        self.mortgage_rate = mortgate_fixed_rate
-        self.property_tax_rate = property_tax_rate
-        self.school_tax_rate = school_tax_rate
-        self.market_value = initial_investment
-        self.re_broker_fee = re_broker_fee
-        self.rent_increase_rate = rent_increase_rate
-        self.book_value = initial_investment
-        self.taxes = self.market_value * (self.property_tax_rate + self.school_tax_rate)
-
-        if initial_investment == 0:
-            self.cost = 0
-            self.rent_cost = rent_cost * 12
-            self.condo_fees = 0
-            self.mortgage_outstanding = 0
-            self.mortgage_payment = 0
-            self.principal_payment = 0
-            self.interest_payment = 0
-        else:
+        if initial_investment > 0:
+            self.loan_schedule = Loan(principal=initial_investment,
+                                      interest=mortgage_rate,
+                                      term=amortization_period)._schedule
             self.cost = startup_cost
             self.rent_cost = 0
             self.condo_fees = condo_fees * 12
-            self.mortgage_outstanding = (1 - downpayment_rate) * initial_investment
-            self.r = self.mortgage_rate / 12
-            self.n = amortization_period * 12
-            self.mortgage_payment = 12 * self.mortgage_outstanding * \
-                                    (self.r * (1 + self.r) ** self.n) / \
-                                    (((1 + self.r) ** self.n) - 1)
-            self.principal_payment = 12 * self.mortgage_outstanding / self.n
-            self.interest_payment = self.mortgage_payment - self.principal_payment
+            self.book_value = initial_investment
+            self.market_value = initial_investment
+        else:
+            self.loan_schedule = []
+            self.cost = 0
+            self.rent_cost = rent_cost * 12
+            self.condo_fees = 0
+            self.book_value = 0
+            self.market_value = 0
 
-        self.yearly_payment = self.mortgage_payment + self.condo_fees + self.rent_cost + self.taxes
+        self.mortgage_outstanding = 0
+        self.mortgage_payment = 0
+        self.principal_payment = 0
+        self.interest_payment = 0
+        self.yearly_payment = 0
+        self.taxes = self.market_value * (self.property_tax_rate + self.school_tax_rate)
         self.housing_return = create_housing_return_generator()
 
         if verbose:
@@ -153,30 +133,32 @@ class REAsset:
             print("RE Downpayment: ${}".format(downpayment_rate * initial_investment))
             print("RE Amortization Period: {} years".format(amortization_period))
             print("RE Monthly Payment Due: ${:.2f}".format(self.yearly_payment/12))
+            print("Mortgage Payment Due: ${:.2f}".format(self.mortgage_payment/12))
 
     def year_end_evaluation(self):
 
-        self.year_counter += 1
+        self.mortgage_payment = 0
+        self.principal_payment = 0
+        self.interest_payment = 0
+        for month in range(1, 13):
+            try:
+                self.mortgage_payment += float(self.loan_schedule[self.year_counter * 12 + month].payment)
+                self.principal_payment += float(self.loan_schedule[self.year_counter * 12 + month].principal)
+                self.interest_payment += float(self.loan_schedule[self.year_counter * 12 + month].interest)
+                self.mortgage_outstanding = float(self.loan_schedule[self.year_counter * 12 + month].balance)
+            except IndexError:
+                break
 
         self.market_value = self.market_value * (1 + self.housing_return())
         self.taxes = self.market_value * (self.property_tax_rate + self.school_tax_rate)
-
-        if self.year_counter < self.amortization_period:
-            self.mortgage_outstanding -= self.principal_payment
-            self.cost += self.interest_payment + self.condo_fees + self.rent_cost + self.taxes
-        elif self.year_counter == self.amortization_period:
-            self.mortgage_outstanding -= self.principal_payment
-            self.cost += self.interest_payment + self.condo_fees + self.rent_cost + self.taxes
-            self.mortgage_payment = 0
-            self.principal_payment = 0
-            self.interest_payment = 0
-        else:
-            self.cost += self.condo_fees + self.rent_cost + self.taxes
-
-        self.yearly_payment = self.mortgage_payment + self.condo_fees + self.rent_cost + self.taxes
+        self.cost += self.interest_payment + self.condo_fees + self.rent_cost + self.taxes
 
         # Account for rent increase
         self.rent_cost = (1 + self.rent_increase_rate) * self.rent_cost
+        # Sum the yearly payment
+        self.yearly_payment = self.mortgage_payment + self.condo_fees + self.rent_cost + self.taxes
+
+        self.year_counter += 1
 
     def sell_asset(self):
 
