@@ -10,15 +10,15 @@ def last_entry(entry):
 
 
 def create_sp_return_generator():
-    """Returns a function that randomly returns S&P performance from it's historical distribution
+    """
+    Returns a function that randomly returns S&P performance from it's historical distribution
 
     Parameters:
     None
 
     Returns:
     Function:get_sp_return
-
-   """
+    """
     # Import the historical S&P returns data
     sp = pd.read_csv(r'sp-500-historical-annual-returns.csv', index_col='date', parse_dates=True)
     # Include data only after 1970
@@ -36,15 +36,15 @@ def create_sp_return_generator():
 
 
 def create_housing_return_generator():
-    """Returns a function that randomly returns Montreal composite HPI returns from it's historical distribution
+    """
+    Returns a function that randomly returns Montreal composite HPI returns from it's historical distribution
 
     Parameters:
     None
 
     Returns:
     Function:get_housing_return
-
-   """
+    """
     # Import the historical housing index data for Montreal
     housing = pd.read_csv(r'montreal-historical-housing-index.csv', usecols=[0, 1], index_col='Date', parse_dates=True)
     # Resample the data on a yearly basis & take the last entry for that year
@@ -65,7 +65,8 @@ def create_housing_return_generator():
 
 def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, horizon, initial_investment,
             raise_rate=0.03, verbose=1):
-    """Returns data from one simulation of a given investment strategy
+    """
+    Returns data from one simulation of a given investment strategy
 
     Parameters:
     condo_cost
@@ -79,8 +80,7 @@ def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, hori
 
     Returns:
     tuple: (pd.DataFrame:performance_history, float:ROI)
-
-   """
+    """
     stock_asset = StockAsset(initial_investment, verbose=verbose)
     re_asset = REAsset(condo_cost, amortization_period=amortization_period, verbose=verbose)
 
@@ -89,8 +89,8 @@ def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, hori
 
         yearly_stock_investment = investment_rate * gross_salary - re_asset.yearly_payment
 
-        if yearly_stock_investment < 0:
-            raise ValueError("You can't afford this mortgage with monthly payment of {}".format(re_asset.yearly_payment/12))
+        assert yearly_stock_investment >= 0, \
+            "You can't afford this mortgage with monthly payment of {}".format(re_asset.yearly_payment/12)
 
         stock_asset.year_end_evaluation(yearly_stock_investment)
         re_asset.year_end_evaluation()
@@ -121,8 +121,10 @@ def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, hori
     return pd.DataFrame(data), ROI
 
 
+# noinspection PyProtectedMember
 class REAsset:
-    """Real-Estate asset object to track status of the investment over time
+    """
+    Real-Estate asset object to track status of the investment over time
 
     Parameters:
     initial_investment
@@ -137,8 +139,7 @@ class REAsset:
     amortization_period=20
     verbose=1
     rent_increase_rate=0.03
-
-   """
+    """
 
     def __init__(self, initial_investment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
                  mortgage_rate=0.032,
@@ -213,14 +214,14 @@ class REAsset:
 
 
 class StockAsset:
-    """Stock asset object to track status of the investment over time
+    """
+    Stock asset object to track status of the investment over time
 
     Parameters:
     initial_investment
     verbose=1
     yearly_transaction_cost=100
-
-   """
+    """
 
     def __init__(self, initial_investment, verbose=1, yearly_transaction_cost=100):
         self.yearly_transaction_cost = yearly_transaction_cost
