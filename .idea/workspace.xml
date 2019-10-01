@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="22f3704d-0580-4336-a6c5-14473bbad2cb" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Monte Carlo Simulation.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/Monte Carlo Simulation.ipynb" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/montecarlo.py" beforeDir="false" afterPath="$PROJECT_DIR$/montecarlo.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -17,8 +15,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/montecarlo.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="212">
-              <caret line="146" column="51" lean-forward="true" selection-start-line="146" selection-start-column="51" selection-end-line="146" selection-end-column="51" />
+            <state relative-caret-position="-723">
+              <caret line="148" column="29" lean-forward="true" selection-start-line="148" selection-start-column="29" selection-end-line="148" selection-end-column="29" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -137,12 +135,18 @@
       <option name="project" value="LOCAL" />
       <updated>1558201854247</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Fixed bug sending total investment amount instead of mortgage amount to RE asset">
+      <created>1569968495357</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1569968495358</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
-    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24960254" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -169,14 +173,15 @@
     <MESSAGE value="Fixed ROI calculation" />
     <MESSAGE value="Refactoring" />
     <MESSAGE value="Finished report &amp; docstrings" />
-    <option name="LAST_COMMIT_MESSAGE" value="Finished report &amp; docstrings" />
+    <MESSAGE value="Fixed bug sending total investment amount instead of mortgage amount to RE asset" />
+    <option name="LAST_COMMIT_MESSAGE" value="Fixed bug sending total investment amount instead of mortgage amount to RE asset" />
   </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/setup.py" />
     <entry file="file://$PROJECT_DIR$/montecarlo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="212">
-          <caret line="146" column="51" lean-forward="true" selection-start-line="146" selection-start-column="51" selection-end-line="146" selection-end-column="51" />
+        <state relative-caret-position="-723">
+          <caret line="148" column="29" lean-forward="true" selection-start-line="148" selection-start-column="29" selection-end-line="148" selection-end-column="29" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
