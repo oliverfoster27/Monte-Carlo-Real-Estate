@@ -142,15 +142,18 @@ class REAsset:
     """
 
     def __init__(self, initial_investment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
-                 mortgage_rate=0.032,
+                 mortgage_rate=0.028,
                  property_tax_rate=0.01, school_tax_rate=0.0015, re_broker_fee=0.05, downpayment_rate=0.2,
                  amortization_period=20, verbose=1, rent_increase_rate=0.03):
 
         self.year_counter = 0
         self.__dict__.update(locals())
 
+        self.downpayment = initial_investment * downpayment_rate
+        self.mortgage_amount = initial_investment * (1 - downpayment_rate)
+
         if initial_investment > 0:
-            self.loan_schedule = Loan(principal=initial_investment,
+            self.loan_schedule = Loan(principal=self.mortgage_amount,
                                       interest=mortgage_rate,
                                       term=amortization_period)._schedule
             self.cost = startup_cost
@@ -177,7 +180,7 @@ class REAsset:
         if verbose:
             print("RE Initial Investment: ${}".format(initial_investment))
             print("RE Book Value: ${}".format(self.book_value))
-            print("RE Downpayment: ${}".format(downpayment_rate * initial_investment))
+            print("RE Downpayment Required: ${}".format(self.downpayment))
             print("RE Amortization Period: {} years".format(amortization_period))
             print("RE Monthly Payment Due: ${:.2f}".format(self.yearly_payment/12))
             print("Mortgage Payment Due: ${:.2f}".format(self.mortgage_payment/12))

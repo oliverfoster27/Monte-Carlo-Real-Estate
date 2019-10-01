@@ -17,8 +17,8 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/montecarlo.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="2618">
-              <caret line="154" column="27" lean-forward="true" selection-start-line="154" selection-start-column="27" selection-end-line="154" selection-end-column="27" />
+            <state relative-caret-position="212">
+              <caret line="146" column="51" lean-forward="true" selection-start-line="146" selection-start-column="51" selection-end-line="146" selection-end-column="51" />
               <folding>
                 <element signature="e#0#25#0" expanded="true" />
               </folding>
@@ -61,6 +61,7 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -72,7 +73,6 @@
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -142,6 +142,7 @@
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1295" height="695" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" order="0" visible="true" weight="0.24960254" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
@@ -174,8 +175,8 @@
     <entry file="file://$PROJECT_DIR$/setup.py" />
     <entry file="file://$PROJECT_DIR$/montecarlo.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="2618">
-          <caret line="154" column="27" lean-forward="true" selection-start-line="154" selection-start-column="27" selection-end-line="154" selection-end-column="27" />
+        <state relative-caret-position="212">
+          <caret line="146" column="51" lean-forward="true" selection-start-line="146" selection-start-column="51" selection-end-line="146" selection-end-column="51" />
           <folding>
             <element signature="e#0#25#0" expanded="true" />
           </folding>
