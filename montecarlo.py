@@ -63,7 +63,7 @@ def create_housing_return_generator():
     return get_housing_return
 
 
-def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, horizon, initial_investment,
+def one_sim(condo_cost, downpayment_available, amortization_period, gross_salary, investment_rate, horizon, initial_investment,
             raise_rate=0.03, verbose=1):
     """
     Returns data from one simulation of a given investment strategy
@@ -81,8 +81,17 @@ def one_sim(condo_cost, amortization_period, gross_salary, investment_rate, hori
     Returns:
     tuple: (pd.DataFrame:performance_history, float:ROI)
     """
+
+    if condo_cost != 0:
+        mortgage_amount = condo_cost - downpayment_available
+        downpayment = downpayment_available
+    else:
+        mortgage_amount = 0
+        downpayment = 0
+        initial_investment += downpayment_available
+
+    re_asset = REAsset(mortgage_amount, downpayment, amortization_period=amortization_period, verbose=verbose)
     stock_asset = StockAsset(initial_investment, verbose=verbose)
-    re_asset = REAsset(condo_cost, amortization_period=amortization_period, verbose=verbose)
 
     data = []
     for year in range(horizon):
@@ -141,26 +150,26 @@ class REAsset:
     rent_increase_rate=0.03
     """
 
-    def __init__(self, initial_investment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
+    def __init__(self, mortgage_amount, downpayment, rent_cost=1100, condo_fees=300, startup_cost=6_000,
                  mortgage_rate=0.028,
-                 property_tax_rate=0.01, school_tax_rate=0.0015, re_broker_fee=0.05, downpayment_rate=0.2,
+                 property_tax_rate=0.01, school_tax_rate=0.0015, re_broker_fee=0.05,
                  amortization_period=20, verbose=1, rent_increase_rate=0.03):
 
         self.year_counter = 0
         self.__dict__.update(locals())
 
-        self.downpayment = initial_investment * downpayment_rate
-        self.mortgage_amount = initial_investment * (1 - downpayment_rate)
+        self.downpayment = downpayment
+        self.mortgage_amount = mortgage_amount
 
-        if initial_investment > 0:
+        if mortgage_amount > 0:
             self.loan_schedule = Loan(principal=self.mortgage_amount,
                                       interest=mortgage_rate,
                                       term=amortization_period)._schedule
             self.cost = startup_cost
             self.rent_cost = 0
             self.condo_fees = condo_fees * 12
-            self.book_value = initial_investment
-            self.market_value = initial_investment
+            self.book_value = mortgage_amount + downpayment
+            self.market_value = mortgage_amount + downpayment
         else:
             self.loan_schedule = []
             self.cost = 0
@@ -178,7 +187,7 @@ class REAsset:
         self.housing_return = create_housing_return_generator()
 
         if verbose:
-            print("RE Initial Investment: ${}".format(initial_investment))
+            print("RE Mortgage Amount: ${}".format(self.mortgage_amount))
             print("RE Book Value: ${}".format(self.book_value))
             print("RE Downpayment Required: ${}".format(self.downpayment))
             print("RE Amortization Period: {} years".format(amortization_period))
